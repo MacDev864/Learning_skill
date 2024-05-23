@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { create } from "./controllers/notes/note.Controller";
+import { create,getAll,getNoteById } from "./controllers/notes/note.Controller";
 
 const route = Router()
-route.get("/",create);
+route.post("/",create);
+route.get("/",getAll);
+route.get("/:id",getNoteById);
 
 
 export default route;

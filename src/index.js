@@ -15,5 +15,5 @@ app.use("/api/v1",route)
 
 app.listen(3000,()=>{
     console.log("http//localhost::3000");
-    mongoose.connect("mongodb+srv://conan00789:IhurzCFdPhOGlJ1D@cluster0.qqwoofi.mongodb.net/test")
+    mongoose.connect("mongodb+srv://conan00789:IhurzCFdPhOGlJ1D@cluster0.qqwoofi.mongodb.net/learning_skill_Api")
 })
