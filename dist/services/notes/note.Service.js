@@ -131,12 +131,12 @@ var findNoteById = exports.findNoteById = /*#__PURE__*/function () {
           return _note.NoteModel.findById(id);
         case 2:
           note = _context3.sent;
-          if (note) {
+          if (!(!note || note.isDeleted == 1)) {
             _context3.next = 5;
             break;
           }
           return _context3.abrupt("return", {
-            data: [],
+            data: {},
             message: "",
             success: false,
             error: true
@@ -187,7 +187,7 @@ var updateNotesById = exports.updateNotesById = /*#__PURE__*/function () {
             break;
           }
           return _context4.abrupt("return", {
-            data: [],
+            data: {},
             message: "",
             success: false,
             error: true
@@ -224,7 +224,7 @@ var deleteNoteById = exports.deleteNoteById = /*#__PURE__*/function () {
             break;
           }
           return _context5.abrupt("return", {
-            data: [],
+            data: {},
             message: "",
             success: false,
             error: true
@@ -259,7 +259,7 @@ var removesNoteById = exports.removesNoteById = /*#__PURE__*/function () {
             break;
           }
           return _context6.abrupt("return", {
-            data: [],
+            data: {},
             message: "",
             success: false,
             error: true
