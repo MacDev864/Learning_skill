@@ -73,9 +73,10 @@ export const findNoteById = async (id) => {
 */
 export const findNoteById = async (id) => {
   const note = await NoteModel.findById(id)
-  if (!note) {
+
+  if (!note || note.isDeleted == 1) {
     return {
-      data: [],
+      data:{},
       message: "",
       success: false,
       error: true,
@@ -102,7 +103,7 @@ export const updateNotesById = async(id,data)=>{
 
   if (!note) {
     return {
-      data: [],
+      data: {},
       message: "",
       success: false,
       error: true,
@@ -120,7 +121,7 @@ export const deleteNoteById = async(id,data)=>{
  
    if (!note) {
      return {
-       data: [],
+       data: {},
        message: "",
        success: false,
        error: true,
@@ -138,7 +139,7 @@ export const deleteNoteById = async(id,data)=>{
  
    if (!note) {
      return {
-       data: [],
+       data: {},
        message: "",
        success: false,
        error: true,
