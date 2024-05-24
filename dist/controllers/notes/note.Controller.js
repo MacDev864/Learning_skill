@@ -20,7 +20,7 @@ var create = exports.create = /*#__PURE__*/function () {
           return (0, _note.createNote)(req.body);
         case 3:
           _create = _context.sent;
-          status = _create.success ? 200 : 500;
+          status = _create.success ? 200 : 404;
           return _context.abrupt("return", res.status(status).send(_create));
         case 8:
           _context.prev = 8;
@@ -52,7 +52,7 @@ var getAll = exports.getAll = /*#__PURE__*/function () {
           return (0, _note.getAllNotes)();
         case 3:
           notes = _context2.sent;
-          status = notes.success ? 200 : 500;
+          status = notes.success ? 200 : 404;
           return _context2.abrupt("return", res.status(status).send(notes));
         case 8:
           _context2.prev = 8;
@@ -85,8 +85,8 @@ var getNoteById = exports.getNoteById = /*#__PURE__*/function () {
             _context3.next = 4;
             break;
           }
-          return _context3.abrupt("return", res.status(500).send({
-            data: [],
+          return _context3.abrupt("return", res.status(404).send({
+            data: {},
             message: "",
             success: false,
             error: true
@@ -96,7 +96,7 @@ var getNoteById = exports.getNoteById = /*#__PURE__*/function () {
           return (0, _note.findNoteById)(id);
         case 6:
           note = _context3.sent;
-          status = note.success ? 200 : 500;
+          status = note.success ? 200 : 404;
           return _context3.abrupt("return", res.status(status).send(note));
         case 11:
           _context3.prev = 11;
@@ -130,8 +130,8 @@ var updateNoteById = exports.updateNoteById = /*#__PURE__*/function () {
             _context4.next = 5;
             break;
           }
-          return _context4.abrupt("return", res.status(500).send({
-            data: [],
+          return _context4.abrupt("return", res.status(404).send({
+            data: {},
             message: "",
             success: false,
             error: true
@@ -141,7 +141,7 @@ var updateNoteById = exports.updateNoteById = /*#__PURE__*/function () {
           return (0, _note.updateNotesById)(id, body);
         case 7:
           note = _context4.sent;
-          status = note.success ? 200 : 500;
+          status = note.success ? 200 : 404;
           return _context4.abrupt("return", res.status(status).send(note));
         case 12:
           _context4.prev = 12;
@@ -175,8 +175,8 @@ var softdeleteNoteById = exports.softdeleteNoteById = /*#__PURE__*/function () {
             _context5.next = 5;
             break;
           }
-          return _context5.abrupt("return", res.status(500).send({
-            data: [],
+          return _context5.abrupt("return", res.status(404).send({
+            data: {},
             message: "",
             success: false,
             error: true
@@ -186,7 +186,7 @@ var softdeleteNoteById = exports.softdeleteNoteById = /*#__PURE__*/function () {
           return (0, _note.removesNoteById)(id, body);
         case 7:
           note = _context5.sent;
-          status = note.success ? 200 : 500;
+          status = note.success ? 200 : 404;
           return _context5.abrupt("return", res.status(status).send(note));
         case 12:
           _context5.prev = 12;
@@ -220,8 +220,8 @@ var removeNoteById = exports.removeNoteById = /*#__PURE__*/function () {
             _context6.next = 5;
             break;
           }
-          return _context6.abrupt("return", res.status(500).send({
-            data: [],
+          return _context6.abrupt("return", res.status(404).send({
+            data: {},
             message: "",
             success: false,
             error: true
@@ -231,7 +231,7 @@ var removeNoteById = exports.removeNoteById = /*#__PURE__*/function () {
           return (0, _note.deleteNoteById)(id);
         case 7:
           note = _context6.sent;
-          status = note.success ? 200 : 500;
+          status = note.success ? 200 : 404;
           return _context6.abrupt("return", res.status(status).send(note));
         case 12:
           _context6.prev = 12;
