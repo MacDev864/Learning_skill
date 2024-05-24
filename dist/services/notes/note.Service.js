@@ -4,7 +4,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getAllNotes = exports.findNoteById = exports.createNote = void 0;
+exports.updateNotesById = exports.removesNoteById = exports.getAllNotes = exports.findNoteById = exports.deleteNoteById = exports.createNote = void 0;
 var _mongoose = _interopRequireWildcard(require("mongoose"));
 var _note = require("../../models/note.model");
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
@@ -13,12 +13,12 @@ function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyri
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 var createNote = exports.createNote = /*#__PURE__*/function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-    var _notedata, title, description, status, tag, isTitleExit, newnote;
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(notedata) {
+    var title, description, status, tag, isTitleExit, newnote;
     return _regeneratorRuntime().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          _notedata = notedata, title = _notedata.title, description = _notedata.description, status = _notedata.status, tag = _notedata.tag;
+          title = notedata.title, description = notedata.description, status = notedata.status, tag = notedata.tag;
           _context.next = 3;
           return _note.NoteModel.findOne({
             title: new RegExp("^".concat(title, "$"), "i")
@@ -50,7 +50,7 @@ var createNote = exports.createNote = /*#__PURE__*/function () {
       }
     }, _callee);
   }));
-  return function createNote() {
+  return function createNote(_x) {
     return _ref.apply(this, arguments);
   };
 }();
@@ -61,7 +61,9 @@ var getAllNotes = exports.getAllNotes = /*#__PURE__*/function () {
       while (1) switch (_context2.prev = _context2.next) {
         case 0:
           _context2.next = 2;
-          return _note.NoteModel.find().exec();
+          return _note.NoteModel.find({
+            isDeleted: 0
+          }).exec();
         case 2:
           notes = _context2.sent;
           if (!(notes.length > 0)) {
@@ -91,23 +93,46 @@ var getAllNotes = exports.getAllNotes = /*#__PURE__*/function () {
     return _ref2.apply(this, arguments);
   };
 }();
+/*
+export const findNoteById = async (id) => {
+  const notes = await NoteModel.find({id:id}).exec();
+  var obj;
+  let note = notes.map((item, index) => {
+    // console.log(item);
+    let result = item.id == id ? obj = item :null;
+
+   
+    return  result;
+  });
+
+  if (!note) {
+    return {
+      data: [],
+      message: "",
+      success: false,
+      error: true,
+    };
+  }
+  return {
+    data: obj,
+    message: "",
+    success: true,
+    error: false,
+  };
+};
+*/
 var findNoteById = exports.findNoteById = /*#__PURE__*/function () {
   var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(id) {
-    var notes, obj, note;
+    var note;
     return _regeneratorRuntime().wrap(function _callee3$(_context3) {
       while (1) switch (_context3.prev = _context3.next) {
         case 0:
           _context3.next = 2;
-          return _note.NoteModel.find().exec();
+          return _note.NoteModel.findById(id);
         case 2:
-          notes = _context3.sent;
-          note = notes.map(function (item, index) {
-            // console.log(item);
-            var result = item.id == id ? obj = item : null;
-            return result;
-          });
+          note = _context3.sent;
           if (note) {
-            _context3.next = 6;
+            _context3.next = 5;
             break;
           }
           return _context3.abrupt("return", {
@@ -116,21 +141,143 @@ var findNoteById = exports.findNoteById = /*#__PURE__*/function () {
             success: false,
             error: true
           });
-        case 6:
-          console.log(obj);
+        case 5:
           return _context3.abrupt("return", {
-            data: obj,
+            data: note,
             message: "",
             success: true,
             error: false
           });
-        case 8:
+        case 6:
         case "end":
           return _context3.stop();
       }
     }, _callee3);
   }));
-  return function findNoteById(_x) {
+  return function findNoteById(_x2) {
     return _ref3.apply(this, arguments);
+  };
+}();
+var updateNotesById = exports.updateNotesById = /*#__PURE__*/function () {
+  var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(id, data) {
+    var note;
+    return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+      while (1) switch (_context4.prev = _context4.next) {
+        case 0:
+          if (!(data.status > 3 || data.tag > 6)) {
+            _context4.next = 2;
+            break;
+          }
+          return _context4.abrupt("return", {
+            data: {},
+            message: "Please Check data to grater",
+            success: false,
+            error: true
+          });
+        case 2:
+          _context4.next = 4;
+          return _note.NoteModel.findByIdAndUpdate(id, data);
+        case 4:
+          _context4.next = 6;
+          return _note.NoteModel.findById(id);
+        case 6:
+          note = _context4.sent;
+          if (note) {
+            _context4.next = 9;
+            break;
+          }
+          return _context4.abrupt("return", {
+            data: [],
+            message: "",
+            success: false,
+            error: true
+          });
+        case 9:
+          return _context4.abrupt("return", {
+            data: note,
+            message: "",
+            success: true,
+            error: false
+          });
+        case 10:
+        case "end":
+          return _context4.stop();
+      }
+    }, _callee4);
+  }));
+  return function updateNotesById(_x3, _x4) {
+    return _ref4.apply(this, arguments);
+  };
+}();
+var deleteNoteById = exports.deleteNoteById = /*#__PURE__*/function () {
+  var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(id, data) {
+    var note;
+    return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+      while (1) switch (_context5.prev = _context5.next) {
+        case 0:
+          _context5.next = 2;
+          return _note.NoteModel.findByIdAndDelete(id);
+        case 2:
+          note = _context5.sent;
+          if (note) {
+            _context5.next = 5;
+            break;
+          }
+          return _context5.abrupt("return", {
+            data: [],
+            message: "",
+            success: false,
+            error: true
+          });
+        case 5:
+          return _context5.abrupt("return", {
+            data: note,
+            message: "",
+            success: true,
+            error: false
+          });
+        case 6:
+        case "end":
+          return _context5.stop();
+      }
+    }, _callee5);
+  }));
+  return function deleteNoteById(_x5, _x6) {
+    return _ref5.apply(this, arguments);
+  };
+}();
+var removesNoteById = exports.removesNoteById = /*#__PURE__*/function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(id, data) {
+    return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+      while (1) switch (_context6.prev = _context6.next) {
+        case 0:
+          _context6.next = 2;
+          return _note.NoteModel.findByIdAndUpdate(id, data);
+        case 2:
+          if (note) {
+            _context6.next = 4;
+            break;
+          }
+          return _context6.abrupt("return", {
+            data: [],
+            message: "",
+            success: false,
+            error: true
+          });
+        case 4:
+          return _context6.abrupt("return", {
+            data: note,
+            message: "",
+            success: true,
+            error: false
+          });
+        case 5:
+        case "end":
+          return _context6.stop();
+      }
+    }, _callee6);
+  }));
+  return function removesNoteById(_x7, _x8) {
+    return _ref6.apply(this, arguments);
   };
 }();
