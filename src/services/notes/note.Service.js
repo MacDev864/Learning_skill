@@ -17,7 +17,7 @@ export const createNote = async (notedata) => {
 
   const newnote = new NoteModel(notedata);
   newnote.save();
-  
+
   return {
     data: newnote,
     message: "create succesfully",
@@ -25,8 +25,47 @@ export const createNote = async (notedata) => {
     error: false,
   };
 };
-export const getAllNotes = async () => {
-  const notes = await NoteModel.find({isDeleted:0}).exec();
+export const getAllNotes = async (query) => {
+  let baseQuery = {};
+
+  const page = query.page || 1;
+  const size = query.size || 25;
+  if (query.status) {
+    baseQuery = {
+      ...baseQuery,
+      ...{
+        status: query.status,
+      },
+    };
+  }
+  if (query.tag) {
+    baseQuery = {
+      ...baseQuery,
+      ...{
+        tag: query.tag,
+      },
+    };
+  }
+  if (query.condition == "or") {
+    baseQuery = {
+      $or: Object.entries(baseQuery).map(([key, value]) => ({
+        [key]: value,
+      })),
+    };
+  }
+  // baseQuery = {
+  //   ...baseQuery,
+  //   ...{
+  //     isDeleted: 0,
+  //   },
+  // };
+  console.log(baseQuery, {
+    baseQuery,
+  });
+  const notes = await NoteModel.find(baseQuery)
+    .skip((page - 1) * size)
+    .limit(size)
+    .exec();
 
   if (notes.length > 0) {
     return {
@@ -72,11 +111,11 @@ export const findNoteById = async (id) => {
 };
 */
 export const findNoteById = async (id) => {
-  const note = await NoteModel.findById(id)
+  const note = await NoteModel.findById(id);
 
   if (!note || note.isDeleted == 1) {
     return {
-      data:{},
+      data: {},
       message: "",
       success: false,
       error: true,
@@ -88,8 +127,8 @@ export const findNoteById = async (id) => {
     success: true,
     error: false,
   };
-}
-export const updateNotesById = async(id,data)=>{
+};
+export const updateNotesById = async (id, data) => {
   if (data.status > 3 || data.tag > 6) {
     return {
       data: {},
@@ -98,8 +137,8 @@ export const updateNotesById = async(id,data)=>{
       error: true,
     };
   }
- await  NoteModel.findByIdAndUpdate(id,data);
- const note = await NoteModel.findById(id)
+  await NoteModel.findByIdAndUpdate(id, data);
+  const note = await NoteModel.findById(id);
 
   if (!note) {
     return {
@@ -115,40 +154,40 @@ export const updateNotesById = async(id,data)=>{
     success: true,
     error: false,
   };
-}
-export const deleteNoteById = async(id,data)=>{
-  let note = await  NoteModel.findByIdAndDelete(id);
- 
-   if (!note) {
-     return {
-       data: {},
-       message: "",
-       success: false,
-       error: true,
-     };
-   }
-   return {
-     data: note,
-     message: "",
-     success: true,
-     error: false,
-   };
- }
- export const removesNoteById = async(id,data)=>{
-  await  NoteModel.findByIdAndUpdate(id,data);
- 
-   if (!note) {
-     return {
-       data: {},
-       message: "",
-       success: false,
-       error: true,
-     };
-   }
-   return {
-     data: note,
-     message: "",
-     success: true,
-     error: false,
-   };
- }
+};
+export const deleteNoteById = async (id, data) => {
+  let note = await NoteModel.findByIdAndDelete(id);
+
+  if (!note) {
+    return {
+      data: {},
+      message: "",
+      success: false,
+      error: true,
+    };
+  }
+  return {
+    data: note,
+    message: "",
+    success: true,
+    error: false,
+  };
+};
+export const removesNoteById = async (id, data) => {
+  await NoteModel.findByIdAndUpdate(id, data);
+
+  if (!note) {
+    return {
+      data: {},
+      message: "",
+      success: false,
+      error: true,
+    };
+  }
+  return {
+    data: note,
+    message: "",
+    success: true,
+    error: false,
+  };
+};
