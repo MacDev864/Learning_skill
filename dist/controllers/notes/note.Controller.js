@@ -49,7 +49,7 @@ var getAll = exports.getAll = /*#__PURE__*/function () {
         case 0:
           _context2.prev = 0;
           _context2.next = 3;
-          return (0, _note.getAllNotes)();
+          return (0, _note.getAllNotes)(req.query);
         case 3:
           notes = _context2.sent;
           status = notes.success ? 200 : 404;
