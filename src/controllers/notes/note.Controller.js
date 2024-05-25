@@ -21,7 +21,7 @@ export const create = async (req, res) => {
 };
 export const getAll = async (req, res) => {
  try {
-  const notes = await getAllNotes();
+  const notes = await getAllNotes(req.query);
   let status = notes.success ? 200 :404;
   return res.status(status).send(notes);
  } catch (error) {
