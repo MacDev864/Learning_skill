@@ -15,7 +15,7 @@ app.use(_bodyParser["default"].urlencoded({
   extended: true
 }));
 app.use("/api/v1", _routes["default"]);
-app.listen(3000, function () {
+app.listen(3000, "".concat(process.env.HOST), function () {
   console.log("".concat(process.env.HOST));
   _mongoose["default"].connect("".concat(process.env.DBHOST));
 });
