@@ -4,7 +4,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.register = exports.login = void 0;
+exports.register = exports.logout = exports.login = void 0;
 var _repo = _interopRequireDefault(require("../../helper/repo"));
 var _auth = require("../../services/auth/auth.Service");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -52,7 +52,7 @@ var login = exports.login = /*#__PURE__*/function () {
         case 0:
           _context2.prev = 0;
           _context2.next = 3;
-          return (0, _auth.signin)(req.body);
+          return (0, _auth.signin)(req.body, res);
         case 3:
           _login = _context2.sent;
           status = _login.success ? 200 : 404;
@@ -74,5 +74,42 @@ var login = exports.login = /*#__PURE__*/function () {
   }));
   return function login(_x3, _x4) {
     return _ref2.apply(this, arguments);
+  };
+}();
+var logout = exports.logout = /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(req, res) {
+    var _logout, status;
+    return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      while (1) switch (_context3.prev = _context3.next) {
+        case 0:
+          _context3.prev = 0;
+          _context3.next = 3;
+          return (0, _auth.logoutService)(req.body);
+        case 3:
+          _logout = _context3.sent;
+          status = _logout.success ? 200 : 404;
+          if (_logout.success) {
+            // Clear cookies
+            res.clearCookie("accessToken");
+            res.clearCookie("refreshToken");
+          }
+          return _context3.abrupt("return", res.status(status).send(_logout));
+        case 9:
+          _context3.prev = 9;
+          _context3.t0 = _context3["catch"](0);
+          return _context3.abrupt("return", res.status(500).send({
+            data: _context3.t0,
+            message: _context3.t0.message,
+            success: false,
+            error: true
+          }));
+        case 12:
+        case "end":
+          return _context3.stop();
+      }
+    }, _callee3, null, [[0, 9]]);
+  }));
+  return function logout(_x5, _x6) {
+    return _ref3.apply(this, arguments);
   };
 }();
