@@ -25,7 +25,7 @@ var NoteSchema = new _mongoose.Schema({
   4 =  "social"
   5 =  "politics"
   6 =  "etc"
-    */
+     */
   tag: {
     type: Number,
     require: false,

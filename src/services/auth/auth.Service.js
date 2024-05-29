@@ -1,120 +1,63 @@
 import mongoose, { Types } from "mongoose";
 import UserModel from "../../models/users.model";
+import { sign } from "jsonwebtoken";
+
+import bcrypt from "bcrypt";
+import Sms from "../../helper/Sms";
+import repo from "../../helper/repo";
+
 export const registers = async (userdata) => {
-  let { username } = userdata;
-  const isNameExit = await UserModel.find({username:username})
-//   const isTitleExit = await UserModel.findOne({
-//     username: new RegExp(`^${username}$`, "i"),
-//   });
-console.log(isNameExit);
-  // if (isTitleExit) {
-  //   return {
-  //     data: isTitleExit,
-  //     message: `Title address ${username} is already exists, please pick a different one.`,
-  //     success: false,
-  //     error: true,
-  //   };
-  // }
+  let { username, password } = userdata;
+  /*------------isNameExit---------------- */
+  const isNameExit = await UserModel.findOne({ username: username });
 
-  // const user = new UserModel(userdata);
-  // user.save();
-
-  // return {
-  //   data: user,
-  //   message: "create succesfully",
-  //   success: true,
-  //   error: false,
-  // };
-};
-export const getAllNotes = async (query) => {
-  let baseQuery = {};
-
-  const page = query.page || 1;
-  const size = query.size || 25;
-  if (query.status) {
-    baseQuery = {
-      ...baseQuery,
-      ...{
-        status: query.status,
-      },
-    };
-  }
-  if (query.tag) {
-    baseQuery = {
-      ...baseQuery,
-      ...{
-        tag: query.tag,
-      },
-    };
-  }
-  if (query.condition == "or") {
-    baseQuery = {
-      $or: Object.entries(baseQuery).map(([key, value]) => ({
-        [key]: value,
-      })),
-    };
-  }
-  // baseQuery = {
-  //   ...baseQuery,
-  //   ...{
-  //     isDeleted: 0,
-  //   },
-  // };
-  console.log(baseQuery, {
-    baseQuery,
-  });
-  const notes = await NoteModel.find(baseQuery)
-    .skip((page - 1) * size)
-    .limit(size)
-    .exec();
-
-  if (notes.length > 0) {
+  if (isNameExit) {
     return {
-      data: notes,
-      message: "",
+      data: isNameExit,
+      message: `Username address ${username} is already exists, please pick a different one.`,
+      success: false,
+      error: true,
+    };
+  }
+  /*------------message---------------- */
+
+  let message = "รหัสผ่านของคุณคือ : ";
+  userdata.password = await bcrypt.hash(password, 10); // 10 is the salt rounds
+
+  try {
+    let data_set = {
+      msisdn: userdata.username,
+      message: message + password,
+      sender: "MacSYSTEM	",
+      force: "corporate",
+    };
+    const sendMessage = await Sms.sendMessage(data_set);
+    // Handle sendMessage
+    if (sendMessage.status !== 201 && sendMessage.status !== 200) {
+      let rs = {
+        data: {
+          code: sendMessage.code,
+        },
+        status: 401,
+        message: sendMessage.error.description,
+        message_ex: sendMessage.error.name,
+        success: false,
+      };
+      return rs;
+    }
+    /* ---------------------------- */
+
+    const user = new UserModel(userdata);
+    user.save();
+    /* ---------------------------- */
+
+    return {
+      data: user,
+      message: "create succesfully",
       success: true,
       error: false,
     };
-  }
-  return {
-    data: [],
-    message: "",
-    success: false,
-    error: true,
-  };
-};
-/*
-export const findNoteById = async (id) => {
-  const notes = await NoteModel.find({id:id}).exec();
-  var obj;
-  let note = notes.map((item, index) => {
-    // console.log(item);
-    let result = item.id == id ? obj = item :null;
-
-   
-    return  result;
-  });
-
-  if (!note) {
-    return {
-      data: [],
-      message: "",
-      success: false,
-      error: true,
-    };
-  }
-  return {
-    data: obj,
-    message: "",
-    success: true,
-    error: false,
-  };
-};
-*/
-export const findNoteById = async (id) => {
-  const note = await NoteModel.findById(id);
-
-  if (!note || note.isDeleted == 1) {
+  } catch (error) {
     return {
       data: {},
       message: "",
@@ -122,73 +65,62 @@ export const findNoteById = async (id) => {
       error: true,
     };
   }
-  return {
-    data: note,
-    message: "",
-    success: true,
-    error: false,
-  };
 };
-export const updateNotesById = async (id, data) => {
-  if (data.status > 3 || data.tag > 6) {
-    return {
-      data: {},
-      message: "Please Check data to grater",
-      success: false,
-      error: true,
-    };
-  }
-  await NoteModel.findByIdAndUpdate(id, data);
-  const note = await NoteModel.findById(id);
+export const signin = async (data) => {
+  try {
+    let { username, password } = data;
+    /*------------isNameExit---------------- */
+    const user = await UserModel.findOne({ username: username });
+    if (!user) {
+      return {
+        data: user,
+        message: `Username address ${username} is not founds.`,
+        success: false,
+        error: true,
+      };
+    }
 
-  if (!note) {
-    return {
-      data: {},
-      message: "",
-      success: false,
-      error: true,
-    };
-  }
-  return {
-    data: note,
-    message: "",
-    success: true,
-    error: false,
-  };
-};
-export const deleteNoteById = async (id, data) => {
-  let note = await NoteModel.findByIdAndDelete(id);
+    let isPassword = await bcrypt.compare(password, user.password);
+    if (!isPassword) {
+      return {
+        data: isPassword,
+        message: ``,
+        success: false,
+        error: true,
+      };
+    }
 
-  if (!note) {
+    const token = sign(
+      {
+        userId: user._id.toString(),
+        username: user.username,
+        role: user.role,
+      },
+      "HELLO WORLD",
+      {
+        expiresIn: "1h",
+        notBefore: "0", // Cannot use before now, can be configured to be deferred
+        algorithm: "HS256",
+        audience: "HELLO WORLD",
+        issuer: "HELLO WORLD",
+      }
+    );
+    // user.role = repo.checkRole(user.role);
+    user.role = repo.checkRole(user.role);
+    console.log(user);
     return {
-      data: {},
-      message: "",
-      success: false,
-      error: true,
+      data: {
+        user_data:user,
+        token:token
+      },
+      message: "create succesfully",
+      success: true,
+      error: false,
     };
-  }
-  return {
-    data: note,
-    message: "",
-    success: true,
-    error: false,
-  };
+    console.log({
+      isPassword: isPassword,
+      token: token,
+    });
+  } catch (error) {}
 };
-export const removesNoteById = async (id, data) => {
-  await NoteModel.findByIdAndUpdate(id, data);
-
-  if (!note) {
-    return {
-      data: {},
-      message: "",
-      success: false,
-      error: true,
-    };
-  }
-  return {
-    data: note,
-    message: "",
-    success: true,
-    error: false,
-  };
-};
+// signin

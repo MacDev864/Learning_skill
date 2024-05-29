@@ -15,5 +15,6 @@ route.get("/get/:id", _note.getNoteById);
 route.patch("/update/:id", _note.updateNoteById);
 route.patch("/remove/:id", _note.updateNoteById);
 route["delete"]("/delete/:id", _note.removeNoteById);
-route.post("/user/create", _auth.register);
+route.post("/register", _auth.register);
+route.post("/login", _auth.login);
 var _default = exports["default"] = route;

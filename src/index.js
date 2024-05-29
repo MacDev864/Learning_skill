@@ -15,7 +15,8 @@ app.use(bodyParser.urlencoded({
 }))
 app.use("/api/v1",route)
 
-app.listen(3000,`${process.env.HOST}`,()=>{
-    console.log(`${process.env.HOST}`);
+app.listen(`${process.env.PORT}`,`${process.env.HOST}`,()=>{
+    console.log("Server running in host "+`${process.env.HOST}`);
+    console.log("Server running in port "+`${process.env.PORT}`);
     mongoose.connect(`${process.env.DBHOST}`)
 })

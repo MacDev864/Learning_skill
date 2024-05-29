@@ -15,7 +15,8 @@ app.use(_bodyParser["default"].urlencoded({
   extended: true
 }));
 app.use("/api/v1", _routes["default"]);
-app.listen(3000, "".concat(process.env.HOST), function () {
-  console.log("".concat(process.env.HOST));
+app.listen("".concat(process.env.PORT), "".concat(process.env.HOST), function () {
+  console.log("Server running in host " + "".concat(process.env.HOST));
+  console.log("Server running in port " + "".concat(process.env.PORT));
   _mongoose["default"].connect("".concat(process.env.DBHOST));
 });
