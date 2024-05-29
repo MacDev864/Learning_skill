@@ -4,13 +4,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.signin = exports.registers = void 0;
+exports.signin = exports.registers = exports.logoutService = void 0;
 var _mongoose = _interopRequireWildcard(require("mongoose"));
 var _users = _interopRequireDefault(require("../../models/users.model"));
 var _jsonwebtoken = require("jsonwebtoken");
 var _bcrypt = _interopRequireDefault(require("bcrypt"));
 var _Sms = _interopRequireDefault(require("../../helper/Sms"));
 var _repo = _interopRequireDefault(require("../../helper/repo"));
+var _token = _interopRequireDefault(require("../../models/token.model"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != _typeof(e) && "function" != typeof e) return { "default": e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n["default"] = e, t && t.set(e, n), n; }
@@ -104,8 +105,8 @@ var registers = exports.registers = /*#__PURE__*/function () {
   };
 }();
 var signin = exports.signin = /*#__PURE__*/function () {
-  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(data) {
-    var username, password, user, isPassword, token;
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(data, res) {
+    var username, password, user, isPassword, token, generatedAccessToken, generatedRefreshToken;
     return _regeneratorRuntime().wrap(function _callee2$(_context2) {
       while (1) switch (_context2.prev = _context2.next) {
         case 0:
@@ -144,7 +145,25 @@ var signin = exports.signin = /*#__PURE__*/function () {
             error: true
           });
         case 12:
-          token = (0, _jsonwebtoken.sign)({
+          _context2.next = 14;
+          return _token["default"].findOne({
+            userId: user._id
+          }).select("accessToken");
+        case 14:
+          token = _context2.sent;
+          if (token) {
+            _context2.next = 20;
+            break;
+          }
+          token = new _token["default"]({
+            userId: user._id
+          });
+          _context2.next = 19;
+          return token.save();
+        case 19:
+          token = _context2.sent;
+        case 20:
+          generatedAccessToken = (0, _jsonwebtoken.sign)({
             userId: user._id.toString(),
             username: user.username,
             role: user.role
@@ -155,29 +174,124 @@ var signin = exports.signin = /*#__PURE__*/function () {
             algorithm: "HS256",
             audience: "HELLO WORLD",
             issuer: "HELLO WORLD"
-          }); // user.role = repo.checkRole(user.role);
-          user.role = _repo["default"].checkRole(user.role);
-          console.log(user);
+          });
+          generatedRefreshToken = (0, _jsonwebtoken.sign)({
+            userId: user._id.toString(),
+            username: user.username,
+            role: user.role
+          }, "HELLO WORLD", {
+            expiresIn: "1h",
+            notBefore: "0",
+            // Cannot use before now, can be configured to be deferred
+            algorithm: "HS256",
+            audience: "HELLO WORLD",
+            issuer: "HELLO WORLD"
+          });
+          token.refreshToken = generatedRefreshToken;
+          token.accessToken = generatedAccessToken;
+          _context2.next = 26;
+          return token.save();
+        case 26:
+          token = _context2.sent;
+          // Set cookies
+          res.cookie("accessToken", token.accessToken, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+            // one days
+            secure: process.env.NODE_ENV === "production"
+          });
+          res.cookie("refreshToken", token.refreshToken, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            // 7 days
+            secure: process.env.NODE_ENV === "production"
+          });
+          /*
+          
+          */
           return _context2.abrupt("return", {
             data: {
               user_data: user,
-              token: token
+              token_data: token
             },
-            message: "create succesfully",
+            message: "login succesfully",
             success: true,
             error: false
           });
-        case 19:
-          _context2.prev = 19;
+        case 32:
+          _context2.prev = 32;
           _context2.t0 = _context2["catch"](0);
-        case 21:
+          throw _context2.t0;
+        case 35:
         case "end":
           return _context2.stop();
       }
-    }, _callee2, null, [[0, 19]]);
+    }, _callee2, null, [[0, 32]]);
   }));
-  return function signin(_x2) {
+  return function signin(_x2, _x3) {
     return _ref2.apply(this, arguments);
   };
 }();
-// signin
+var logoutService = exports.logoutService = /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(data) {
+    var refreshToken, token, userId;
+    return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      while (1) switch (_context3.prev = _context3.next) {
+        case 0:
+          refreshToken = data.refreshToken;
+          _context3.prev = 1;
+          _context3.next = 4;
+          return _token["default"].findOne({
+            refreshToken: refreshToken
+          });
+        case 4:
+          token = _context3.sent;
+          if (token) {
+            _context3.next = 7;
+            break;
+          }
+          return _context3.abrupt("return", {
+            data: {
+              token_data: token
+            },
+            message: "logout failed",
+            success: false,
+            error: true
+          });
+        case 7:
+          userId = (0, _jsonwebtoken.verify)(refreshToken, "HELLO WORLD", "HELLO WORLD").userId;
+          if (userId) {
+            _context3.next = 10;
+            break;
+          }
+          return _context3.abrupt("return", {
+            data: {},
+            message: "logout failed",
+            success: false,
+            error: true
+          });
+        case 10:
+          _context3.next = 12;
+          return _token["default"].deleteOne({
+            refreshToken: refreshToken
+          });
+        case 12:
+          return _context3.abrupt("return", {
+            data: {},
+            message: "Successfully logged out 😏 🍀",
+            success: true,
+            error: false
+          });
+        case 15:
+          _context3.prev = 15;
+          _context3.t0 = _context3["catch"](1);
+        case 17:
+        case "end":
+          return _context3.stop();
+      }
+    }, _callee3, null, [[1, 15]]);
+  }));
+  return function logoutService(_x4) {
+    return _ref3.apply(this, arguments);
+  };
+}();
