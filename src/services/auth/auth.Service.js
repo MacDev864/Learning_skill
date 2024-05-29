@@ -1,10 +1,11 @@
 import mongoose, { Types } from "mongoose";
 import UserModel from "../../models/users.model";
-import { sign } from "jsonwebtoken";
+import { sign, verify } from "jsonwebtoken";
 
 import bcrypt from "bcrypt";
 import Sms from "../../helper/Sms";
 import repo from "../../helper/repo";
+import TokenModel from "../../models/token.model";
 
 export const registers = async (userdata) => {
   let { username, password } = userdata;
@@ -66,7 +67,7 @@ export const registers = async (userdata) => {
     };
   }
 };
-export const signin = async (data) => {
+export const signin = async (data,res) => {
   try {
     let { username, password } = data;
     /*------------isNameExit---------------- */
@@ -89,13 +90,14 @@ export const signin = async (data) => {
         error: true,
       };
     }
-
-    const token = sign(
-      {
-        userId: user._id.toString(),
-        username: user.username,
-        role: user.role,
-      },
+    let token =await TokenModel.findOne({ userId: user._id }).select("accessToken");
+    if (!token) {
+      token =  new TokenModel({ userId: user._id });
+      token = await token.save();
+    }
+    
+    const generatedAccessToken = sign(
+      { userId: user._id.toString(), username: user.username, role: user.role },
       "HELLO WORLD",
       {
         expiresIn: "1h",
@@ -105,22 +107,92 @@ export const signin = async (data) => {
         issuer: "HELLO WORLD",
       }
     );
-    // user.role = repo.checkRole(user.role);
-    user.role = repo.checkRole(user.role);
-    console.log(user);
+    const generatedRefreshToken = sign(
+      { userId: user._id.toString(), username: user.username, role: user.role },
+      "HELLO WORLD",
+      {
+        expiresIn: "1h",
+        notBefore: "0", // Cannot use before now, can be configured to be deferred
+        algorithm: "HS256",
+        audience: "HELLO WORLD",
+        issuer: "HELLO WORLD",
+      }
+    );
+    token.refreshToken = generatedRefreshToken;
+    token.accessToken = generatedAccessToken;
+    token = await token.save();
+    // Set cookies
+    res.cookie("accessToken", token.accessToken, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // one days
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    res.cookie("refreshToken", token.refreshToken, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === "production",
+    });
+    /*
+    
+    */
     return {
       data: {
-        user_data:user,
-        token:token
+        user_data: user,
+        token_data:token
       },
-      message: "create succesfully",
+      message: "login succesfully",
       success: true,
       error: false,
     };
-    console.log({
-      isPassword: isPassword,
-      token: token,
-    });
-  } catch (error) {}
+  } catch (error) {
+    throw error
+  }
 };
-// signin
+export const logoutService = async (data) => {
+  const { refreshToken } =data;
+
+  try {
+    const token = await TokenModel.findOne({
+      refreshToken,
+    });
+
+    if (!token) {
+      return {
+        data: {
+          token_data:token
+        },
+        message: "logout failed",
+        success: false,
+        error: true,
+      };
+    }
+   
+   let  userId = verify(refreshToken,"HELLO WORLD","HELLO WORLD").userId
+    if (!userId) {
+      return {
+        data: {},
+        message: "logout failed",
+        success: false,
+        error: true,
+      };
+    }
+
+    // Clear Token
+    await TokenModel.deleteOne({
+      refreshToken,
+    });
+
+    return {
+      data: {
+        
+      },
+      message: "Successfully logged out 😏 🍀",
+      success: true,
+      error: false,
+    };
+    // 
+  } catch (error) {
+    // return next(InternalServerError);
+  }
+};
